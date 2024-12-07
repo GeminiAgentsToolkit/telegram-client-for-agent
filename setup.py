@@ -20,8 +20,8 @@ install_requires = read_requirements()
 
 setup(
     name='telegram_agent_bot',
-    version='0.0.2',
-    packages=find_packages(),
+    version='0.1.0',
+    packages=find_packages(exclude=["test.py"]),
     description='Wrapper For Geminin Agents',
     long_description_content_type='text/markdown',
     author='Viacheslav Kovalevskyi',

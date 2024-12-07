@@ -2,6 +2,8 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram import Bot
 from telegram_agent_bot.client import send_message
 
+import inspect
+
 
 chat_ids = None
 token = None
@@ -10,6 +12,21 @@ _generate_agent_fn = None
 
 CLIENTS = {
 }
+
+
+def call_generate_agent_fun(*, on_message, user_id=None):
+    global _generate_agent_fn
+    # Get the signature of the `create_agent` function
+    sig = inspect.signature(_generate_agent_fn)
+    parameters = sig.parameters
+
+    # Check if 'user_id' is in the parameters
+    if 'user_id' in parameters:
+        # Call the new version with 'user_id'
+        return _generate_agent_fn(on_message, user_id=user_id)
+    else:
+        # Call the old version without 'user_id'
+        return _generate_agent_fn(on_message)
 
 
 def generate_client_function(chat_id):
@@ -32,9 +49,11 @@ async def message(update, context):
         return
     clt = CLIENTS.get(update.message.chat_id, None)
     if not clt:
-        clt = _generate_agent_fn(on_message=generate_client_function(str(update.message.chat_id)))
+        clt = call_generate_agent_fun(
+            on_message=generate_client_function(str(update.message.chat_id)),
+            user_id=update.message.chat_id)
         CLIENTS[update.message.chat_id] = clt
-    clt.send_message(update.message.text, )
+    clt.send_message(update.message.text)
 
 
 async def get_chat_id(update, context):
